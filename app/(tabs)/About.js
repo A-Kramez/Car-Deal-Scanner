@@ -15,7 +15,7 @@ export default function About() {
                     marginBottom: 20
                 }}
             >
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>? Back</Text>
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>{'< Back'}</Text>
             </Pressable>
 
             <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold', marginBottom: 15 }}>

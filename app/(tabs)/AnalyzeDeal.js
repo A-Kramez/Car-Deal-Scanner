@@ -1,16 +1,18 @@
 import { useState } from 'react'
-import { ScrollView, Text, TextInput, Button, View, Pressable } from 'react-native'
+import { ScrollView, Text, TextInput, Button, View, Pressable, KeyboardAvoidingView, Platform } from 'react-native'
 import { router } from 'expo-router'
 import { supabase } from '../../supabaseClient'
 
-const API_URL = 'http://192.168.1.244:8000'
+const API_URL = 'https://car-deal-scanner-backend.onrender.com'
 
 export default function AnalyzeDeal() {
     const [make, setMake] = useState('')
     const [model, setModel] = useState('')
+    const [year, setYear] = useState('')
     const [engineSize, setEngineSize] = useState('')
     const [price, setPrice] = useState('')
     const [mileage, setMileage] = useState('')
+    const [url, setUrl] = useState('')
     const [description, setDescription] = useState('')
     const [analysis, setAnalysis] = useState(null)
     const [loading, setLoading] = useState(false)
@@ -41,6 +43,7 @@ export default function AnalyzeDeal() {
                     engine_size: parseFloat(engineSize),
                     mileage: parseInt(mileage),
                     price: parseInt(price),
+                    year: year ? parseInt(year) : null,
                     description
                 })
             })
@@ -75,12 +78,12 @@ export default function AnalyzeDeal() {
                 user_id: currentUser.id,
                 make,
                 model,
-                year: null,
+                year: year ? parseInt(year) : null,
                 engine_size: parseFloat(engineSize),
                 price_numeric: parseInt(price),
                 mileage_numeric: parseInt(mileage),
                 description,
-                source_url: null
+                source_url: url || null
             }])
 
         if (error) {
@@ -92,91 +95,116 @@ export default function AnalyzeDeal() {
     }
 
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: '#000' }} contentContainerStyle={{ padding: 20 }}>
-
-            <Pressable
-                onPress={() => router.back()}
-                style={{
-                    backgroundColor: '#222',
-                    paddingVertical: 10,
-                    paddingHorizontal: 14,
-                    borderRadius: 10,
-                    alignSelf: 'flex-start',
-                    marginBottom: 20
-                }}
+        <KeyboardAvoidingView
+            style={{ flex: 1, backgroundColor: '#000' }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={20}
+        >
+            <ScrollView
+                keyboardShouldPersistTaps="handled"
+                style={{ flex: 1 }}
+                contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
             >
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>? Back</Text>
-            </Pressable>
+                <Pressable
+                    onPress={() => router.back()}
+                    style={{
+                        backgroundColor: '#222',
+                        paddingVertical: 10,
+                        paddingHorizontal: 14,
+                        borderRadius: 10,
+                        alignSelf: 'flex-start',
+                        marginBottom: 20
+                    }}
+                >
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>{'< Back'}</Text>
+                </Pressable>
 
-            <Text style={{ color: '#fff', fontSize: 26, fontWeight: 'bold', marginBottom: 20 }}>
-                Analyze Deal
-            </Text>
+                <Text style={{ color: '#fff', fontSize: 26, fontWeight: 'bold', marginBottom: 20 }}>
+                    Analyze Deal
+                </Text>
 
-            <TextInput placeholder="Make" placeholderTextColor="#666" value={make} onChangeText={setMake} style={inputStyle} />
-            <TextInput placeholder="Model" placeholderTextColor="#666" value={model} onChangeText={setModel} style={inputStyle} />
-            <TextInput placeholder="Engine Size e.g. 1.4" placeholderTextColor="#666" value={engineSize} onChangeText={setEngineSize} keyboardType="numeric" style={inputStyle} />
-            <TextInput placeholder="Price" placeholderTextColor="#666" value={price} onChangeText={setPrice} keyboardType="numeric" style={inputStyle} />
-            <TextInput placeholder="Mileage" placeholderTextColor="#666" value={mileage} onChangeText={setMileage} keyboardType="numeric" style={inputStyle} />
+                <TextInput placeholder="Make" placeholderTextColor="#666" value={make} onChangeText={setMake} style={inputStyle} />
+                <TextInput placeholder="Model" placeholderTextColor="#666" value={model} onChangeText={setModel} style={inputStyle} />
+                <TextInput placeholder="Year" placeholderTextColor="#666" value={year} onChangeText={setYear} keyboardType="numeric" style={inputStyle} />
+                <TextInput placeholder="Engine Size e.g. 1.4" placeholderTextColor="#666" value={engineSize} onChangeText={setEngineSize} keyboardType="numeric" style={inputStyle} />
+                <TextInput placeholder="Price" placeholderTextColor="#666" value={price} onChangeText={setPrice} keyboardType="numeric" style={inputStyle} />
+                <TextInput placeholder="Mileage" placeholderTextColor="#666" value={mileage} onChangeText={setMileage} keyboardType="numeric" style={inputStyle} />
+                <TextInput placeholder="Listing URL (optional)" placeholderTextColor="#666" value={url} onChangeText={setUrl} style={inputStyle} />
 
-            <TextInput
-                placeholder="Description / notes"
-                placeholderTextColor="#666"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                style={[inputStyle, { height: 100 }]}
-            />
+                <TextInput
+                    placeholder="Description / notes"
+                    placeholderTextColor="#666"
+                    value={description}
+                    onChangeText={setDescription}
+                    multiline
+                    textAlignVertical="top"
+                    style={[inputStyle, { height: 120 }]}
+                />
 
-            <Button title={loading ? 'Analyzing...' : 'Analyze Deal'} onPress={analyzeDeal} />
+                <Button title={loading ? 'Analyzing...' : 'Analyze Deal'} onPress={analyzeDeal} />
 
-            {analysis && (
-                <View style={{ marginTop: 25, backgroundColor: '#111', padding: 16, borderRadius: 12 }}>
-                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
-                        Result
-                    </Text>
+                {analysis && (
+                    <View style={{
+                        marginTop: 25,
+                        backgroundColor: '#111',
+                        padding: 18,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: '#333'
+                    }}>
+                        <Text style={{ color: '#aaa', fontSize: 14 }}>
+                            Analysis Result
+                        </Text>
 
-                    <Text style={{ color: '#fff', marginTop: 10 }}>
-                        Rating: {analysis.deal_analysis?.rating}
-                    </Text>
+                        <Text style={{ color: '#fff', fontSize: 26, fontWeight: 'bold', marginTop: 6 }}>
+                            {analysis.deal_analysis?.rating}
+                        </Text>
 
-                    <Text style={{ color: '#fff' }}>
-                        Score: {analysis.deal_analysis?.score ?? 'N/A'}%
-                    </Text>
+                        <Text style={{ color: '#aaa', marginTop: 4 }}>
+                            Deal score: {analysis.deal_analysis?.score ?? 'N/A'}
+                        </Text>
 
-                    <Text style={{ color: '#fff' }}>
-                        Market Median: £{analysis.market_price_median ?? 'N/A'}
-                    </Text>
+                        <View style={{ height: 1, backgroundColor: '#333', marginVertical: 14 }} />
 
-                    <Text style={{ color: '#fff' }}>
-                        Market Average: £{analysis.market_price_average ?? 'N/A'}
-                    </Text>
+                        <Text style={{ color: '#fff' }}>
+                            Market median: GBP {analysis.market_price_median ?? 'N/A'}
+                        </Text>
 
-                    <Text style={{ color: '#fff' }}>
-                        Comparable Cars: {analysis.samples}
-                    </Text>
+                        <Text style={{ color: '#fff', marginTop: 6 }}>
+                            Market average: GBP {analysis.market_price_average ?? 'N/A'}
+                        </Text>
 
-                    <Text style={{ color: '#fff' }}>
-                        Confidence: {analysis.deal_analysis?.confidence}
-                    </Text>
+                        <Text style={{ color: '#fff', marginTop: 6 }}>
+                            Comparable cars: {analysis.samples}
+                        </Text>
 
-                    <Text style={{ color: '#fff', marginTop: 10 }}>
-                        Red Flags: {analysis.description_analysis?.red_flags?.length > 0
-                            ? analysis.description_analysis.red_flags.join(', ')
-                            : 'None found'}
-                    </Text>
+                        <Text style={{ color: '#fff', marginTop: 6 }}>
+                            Confidence: {analysis.deal_analysis?.confidence}
+                        </Text>
 
-                    <Text style={{ color: '#fff' }}>
-                        Positives: {analysis.description_analysis?.positives?.length > 0
-                            ? analysis.description_analysis.positives.join(', ')
-                            : 'None found'}
-                    </Text>
+                        <View style={{ height: 1, backgroundColor: '#333', marginVertical: 14 }} />
 
-                    <View style={{ height: 12 }} />
-                    <Button title="Save Deal" onPress={saveDeal} />
+                        <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                            Description checks
+                        </Text>
 
-                </View>
+                        <Text style={{ color: '#fff', marginTop: 8 }}>
+                            Red flags: {analysis.description_analysis?.red_flags?.length > 0
+                                ? analysis.description_analysis.red_flags.join(', ')
+                                : 'None found'}
+                        </Text>
 
-            )}
-        </ScrollView>
+                        <Text style={{ color: '#fff', marginTop: 6 }}>
+                            Positives: {analysis.description_analysis?.positives?.length > 0
+                                ? analysis.description_analysis.positives.join(', ')
+                                : 'None found'}
+                        </Text>
+
+                        <View style={{ height: 12 }} />
+                        <Button title="Save Deal" onPress={saveDeal} />
+                    </View>
+                )}
+            </ScrollView>
+        </KeyboardAvoidingView>
     )
 }

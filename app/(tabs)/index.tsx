@@ -2,6 +2,7 @@
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native'
 import { supabase } from'../../supabaseClient'
 import Home from './Home.js'
+import { KeyboardAvoidingView, Platform } from 'react-native'
 
 export default function App() {
     const [email, setEmail] = useState('')
@@ -53,7 +54,10 @@ export default function App() {
     }
 
     return (
-        <View style={styles.container}>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
             <Text style={styles.title}>Car Deal Scanner</Text>
 
             <Text style={styles.label}>Email</Text>
@@ -81,7 +85,7 @@ export default function App() {
             <Button title="Sign Up" onPress={signUp} />
             <View style={{ height: 10 }} />
             <Button title="Login" onPress={signIn} />
-        </View>
+        </KeyboardAvoidingView>
     )
 }
 

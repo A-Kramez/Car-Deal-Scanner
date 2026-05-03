@@ -72,7 +72,10 @@ def analyze_deal(payload: dict = Body(...)):
     price = int(payload.get("price"))
     description = payload.get("description", "")
 
-    market_data = get_market_stats(make, model, engine_size, mileage)
+    year = payload.get("year")
+    year = int(year) if year else None
+
+    market_data = get_market_stats(make, model, engine_size, mileage, year)
     deal = calculate_deal_score(price, market_data)
     description_analysis = analyse_description(description)
 
@@ -80,6 +83,7 @@ def analyze_deal(payload: dict = Body(...)):
         "market_price_median": market_data["median_price"] if market_data else None,
         "market_price_average": market_data["avg_price"] if market_data else None,
         "samples": market_data["samples"] if market_data else 0,
+        "match_type": market_data["match_type"] if market_data else None,
         "deal_analysis": deal,
         "description_analysis": description_analysis,
     }
