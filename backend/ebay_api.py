@@ -52,7 +52,7 @@ def search_ebay_listings(make, model, year=None, limit=5):
 
     params = {
         "q": query,
-        "limit": limit,
+        "limit": 50,
         "filter": "buyingOptions:{FIXED_PRICE}"
     }
 
@@ -87,8 +87,12 @@ def search_ebay_listings(make, model, year=None, limit=5):
             "location": item.get("itemLocation", {}).get("country")
         })
 
+        if len(results) >= limit:
+            break
+
     return {
         "query": query,
-        "total": data.get("total", 0),
+        "total_found_by_ebay": data.get("total", 0),
+        "returned": len(results),
         "items": results
     }
