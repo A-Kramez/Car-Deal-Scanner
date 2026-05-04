@@ -51,9 +51,10 @@ def search_ebay_listings(make, model, year=None, limit=5):
     }
 
     params = {
-        "q": query,
-        "limit": 50,
-        "filter": "buyingOptions:{FIXED_PRICE}"
+    "q": query,
+    "limit": 100,
+    "category_ids": "9801",
+    "filter": "buyingOptions:{FIXED_PRICE}"
     }
 
     response = requests.get(url, headers=headers, params=params, timeout=20)
