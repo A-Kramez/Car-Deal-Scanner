@@ -2,6 +2,7 @@ from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 from database import get_connection
 from pricing import get_market_stats, calculate_deal_score
+from ebay_api import search_ebay_listings
 
 app = FastAPI()
 
@@ -87,3 +88,7 @@ def analyze_deal(payload: dict = Body(...)):
         "deal_analysis": deal,
         "description_analysis": description_analysis,
     }
+
+@app.get("/ebay-search")
+def ebay_search(make: str, model: str, year: int | None = None, limit: int = 5):
+    return search_ebay_listings(make, model, year, limit)
