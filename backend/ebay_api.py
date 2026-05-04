@@ -1,45 +1,9 @@
-import os
-import base64
-import requests
-from dotenv import load_dotenv
-
-load_dotenv()
-
-
-def get_ebay_access_token():
-    client_id = os.getenv("EBAY_CLIENT_ID")
-    client_secret = os.getenv("EBAY_CLIENT_SECRET")
-
-    if not client_id or not client_secret:
-        raise ValueError("Missing eBay API credentials")
-
-    credentials = f"{client_id}:{client_secret}"
-    encoded_credentials = base64.b64encode(credentials.encode()).decode()
-
-    url = "https://api.ebay.com/identity/v1/oauth2/token"
-
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": f"Basic {encoded_credentials}"
-    }
-
-    data = {
-        "grant_type": "client_credentials",
-        "scope": "https://api.ebay.com/oauth/api_scope"
-    }
-
-    response = requests.post(url, headers=headers, data=data, timeout=20)
-    response.raise_for_status()
-
-    return response.json()["access_token"]
-
-
 def search_ebay_listings(make, model, year=None, limit=5):
     token = get_ebay_access_token()
 
-    query = f"{make} {model}"
+    query = f"{make} {model} car"
     if year:
-        query = f"{query} {year}"
+        query = f"{make} {model} {year} car"
 
     url = "https://api.ebay.com/buy/browse/v1/item_summary/search"
 
@@ -62,10 +26,20 @@ def search_ebay_listings(make, model, year=None, limit=5):
 
     for item in data.get("itemSummaries", []):
         price = item.get("price", {})
+        value = price.get("value")
+
+        # Skip listings with no price
+        if value is None:
+            continue
+
+        # Keep only listings priced 1000 or above.
+        # This helps remove low-price parts/accessories.
+        if float(value) < 1000:
+            continue
 
         results.append({
             "title": item.get("title"),
-            "price": price.get("value"),
+            "price": value,
             "currency": price.get("currency"),
             "url": item.get("itemWebUrl"),
             "condition": item.get("condition"),
