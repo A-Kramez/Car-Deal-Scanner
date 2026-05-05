@@ -4,6 +4,23 @@ import { router } from 'expo-router'
 export default function About() {
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#000' }} contentContainerStyle={{ padding: 20 }}>
+            <View
+                style={{
+                    backgroundColor: '#1f2933',
+                    paddingTop: 55,
+                    paddingBottom: 28,
+                    paddingHorizontal: 20,
+                    marginHorizontal: -20,
+                    marginTop: -20,
+                    marginBottom: 20,
+                    alignItems: 'center'
+                }}
+            >
+                <Text style={{ color: '#fff', fontSize: 30, fontWeight: 'bold' }}>
+                    About
+                </Text>
+            </View>
+
             <Pressable
                 onPress={() => router.back()}
                 style={{
@@ -18,7 +35,7 @@ export default function About() {
                 <Text style={{ color: '#fff', fontWeight: 'bold' }}>{'< Back'}</Text>
             </Pressable>
 
-            <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold', marginBottom: 15 }}>
+            <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold', marginBottom: 15 }}>
                 About Car Deal Scanner
             </Text>
 

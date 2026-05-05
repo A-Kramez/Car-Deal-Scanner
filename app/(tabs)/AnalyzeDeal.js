@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ScrollView, Text, TextInput, Button, View, Pressable, KeyboardAvoidingView, Platform } from 'react-native'
+import { ScrollView, Text, TextInput, Button, View, Pressable, KeyboardAvoidingView, Platform, Linking } from 'react-native'
 import { router } from 'expo-router'
 import { supabase } from '../../supabaseClient'
 
@@ -15,6 +15,7 @@ export default function AnalyzeDeal() {
     const [url, setUrl] = useState('')
     const [description, setDescription] = useState('')
     const [analysis, setAnalysis] = useState(null)
+    const [ebayResults, setEbayResults] = useState(null)
     const [loading, setLoading] = useState(false)
 
     const inputStyle = {
@@ -32,6 +33,8 @@ export default function AnalyzeDeal() {
         }
 
         setLoading(true)
+        setAnalysis(null)
+        setEbayResults(null)
 
         try {
             const response = await fetch(`${API_URL}/analyze-deal`, {
@@ -50,6 +53,14 @@ export default function AnalyzeDeal() {
 
             const data = await response.json()
             setAnalysis(data)
+
+            const ebayResponse = await fetch(
+                `${API_URL}/ebay-search?make=${make}&model=${model}&year=${year || ''}&limit=5`
+            )
+
+            const ebayData = await ebayResponse.json()
+            setEbayResults(ebayData)
+
         } catch (error) {
             alert('Could not connect to backend')
             console.log(error)
@@ -105,6 +116,23 @@ export default function AnalyzeDeal() {
                 style={{ flex: 1 }}
                 contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
             >
+                <View
+                    style={{
+                        backgroundColor: '#1f2933',
+                        paddingTop: 55,
+                        paddingBottom: 28,
+                        paddingHorizontal: 20,
+                        marginHorizontal: -20,
+                        marginTop: -20,
+                        marginBottom: 20,
+                        alignItems: 'center'
+                    }}
+                >
+                    <Text style={{ color: '#fff', fontSize: 30, fontWeight: 'bold' }}>
+                        Analyze Deal
+                    </Text>
+                </View>
+
                 <Pressable
                     onPress={() => router.back()}
                     style={{
@@ -118,10 +146,6 @@ export default function AnalyzeDeal() {
                 >
                     <Text style={{ color: '#fff', fontWeight: 'bold' }}>{'< Back'}</Text>
                 </Pressable>
-
-                <Text style={{ color: '#fff', fontSize: 26, fontWeight: 'bold', marginBottom: 20 }}>
-                    Analyze Deal
-                </Text>
 
                 <TextInput placeholder="Make" placeholderTextColor="#666" value={make} onChangeText={setMake} style={inputStyle} />
                 <TextInput placeholder="Model" placeholderTextColor="#666" value={model} onChangeText={setModel} style={inputStyle} />
@@ -161,7 +185,7 @@ export default function AnalyzeDeal() {
                         </Text>
 
                         <Text style={{ color: '#aaa', marginTop: 4 }}>
-                            Deal score: {analysis.deal_analysis?.score ?? 'N/A'}
+                            Price difference: {analysis.deal_analysis?.score ?? 'N/A'}%
                         </Text>
 
                         <View style={{ height: 1, backgroundColor: '#333', marginVertical: 14 }} />
@@ -202,6 +226,49 @@ export default function AnalyzeDeal() {
 
                         <View style={{ height: 12 }} />
                         <Button title="Save Deal" onPress={saveDeal} />
+                    </View>
+                )}
+
+                {ebayResults && (
+                    <View style={{
+                        marginTop: 18,
+                        backgroundColor: '#111',
+                        padding: 18,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: '#333'
+                    }}>
+                        <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+                            Similar eBay Listings
+                        </Text>
+
+                        <Text style={{ color: '#aaa', marginTop: 6, marginBottom: 12 }}>
+                            Live fixed-price listings over GBP 1000
+                        </Text>
+
+                        {ebayResults.items && ebayResults.items.length > 0 ? (
+                            ebayResults.items.map((item, index) => (
+                                <View key={index} style={{ marginBottom: 14 }}>
+                                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                                        {item.title}
+                                    </Text>
+
+                                    <Text style={{ color: '#aaa', marginTop: 4 }}>
+                                        GBP {item.price} | {item.condition}
+                                    </Text>
+
+                                    <Pressable onPress={() => Linking.openURL(item.url)}>
+                                        <Text style={{ color: '#60a5fa', marginTop: 4 }}>
+                                            Open eBay listing
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                            ))
+                        ) : (
+                            <Text style={{ color: '#aaa' }}>
+                                No similar eBay listings found.
+                            </Text>
+                        )}
                     </View>
                 )}
             </ScrollView>

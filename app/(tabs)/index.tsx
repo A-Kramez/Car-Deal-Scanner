@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react'
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native'
 import { supabase } from'../../supabaseClient'
-import Home from './Home.js'
+import Home from '../Home.js'
 import { KeyboardAvoidingView, Platform } from 'react-native'
 
 export default function App() {

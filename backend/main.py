@@ -26,6 +26,11 @@ RED_FLAGS = [
     "warning light",
     "no service history",
     "non runner",
+    "strange noise",
+    "crunch",
+    "oil leak",
+    "coolant leak",
+
 ]
 
 POSITIVES = [
@@ -38,6 +43,9 @@ POSITIVES = [
     "long mot",
     "timing belt done",
     "cam belt done",
+    "with recipet",
+    "ulez compliant",
+    "well maintained",
 ]
 
 def analyse_description(description: str):

@@ -9,6 +9,7 @@ const API_URL = 'https://car-deal-scanner-backend.onrender.com'
 export default function SavedDeals() {
     const [deals, setDeals] = useState([])
     const [analysis, setAnalysis] = useState(null)
+    const [ebayResults, setEbayResults] = useState(null)
     const [loadingId, setLoadingId] = useState(null)
 
     async function fetchDeals() {
@@ -38,6 +39,7 @@ export default function SavedDeals() {
 
         if (!error) {
             setAnalysis(null)
+            setEbayResults(null)
             fetchDeals()
         } else {
             console.log(error)
@@ -51,6 +53,8 @@ export default function SavedDeals() {
         }
 
         setLoadingId(deal.id)
+        setAnalysis(null)
+        setEbayResults(null)
 
         try {
             const response = await fetch(`${API_URL}/analyze-deal`, {
@@ -62,12 +66,21 @@ export default function SavedDeals() {
                     engine_size: deal.engine_size,
                     mileage: deal.mileage_numeric,
                     price: deal.price_numeric,
+                    year: deal.year || null,
                     description: deal.description || ''
                 })
             })
 
             const data = await response.json()
             setAnalysis(data)
+
+            const ebayResponse = await fetch(
+                `${API_URL}/ebay-search?make=${deal.make}&model=${deal.model}&year=${deal.year || ''}&limit=5`
+            )
+
+            const ebayData = await ebayResponse.json()
+            setEbayResults(ebayData)
+
         } catch (error) {
             console.log(error)
             alert('Failed to analyze deal')
@@ -89,6 +102,23 @@ export default function SavedDeals() {
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#000' }} contentContainerStyle={{ padding: 20, paddingBottom: 80 }}>
 
+            <View
+                style={{
+                    backgroundColor: '#1f2933',
+                    paddingTop: 55,
+                    paddingBottom: 28,
+                    paddingHorizontal: 20,
+                    marginHorizontal: -20,
+                    marginTop: -20,
+                    marginBottom: 20,
+                    alignItems: 'center'
+                }}
+            >
+                <Text style={{ color: '#fff', fontSize: 30, fontWeight: 'bold' }}>
+                    Saved Deals
+                </Text>
+            </View>
+
             <Pressable
                 onPress={() => router.back()}
                 style={{
@@ -102,10 +132,6 @@ export default function SavedDeals() {
             >
                 <Text style={{ color: '#fff', fontWeight: 'bold' }}>{'< Back'}</Text>
             </Pressable>
-
-            <Text style={{ color: '#fff', fontSize: 26, fontWeight: 'bold', marginBottom: 6 }}>
-                Saved Deals
-            </Text>
 
             <Text style={{ color: '#aaa', marginBottom: 20 }}>
                 Re-check previously saved listings.
@@ -194,7 +220,7 @@ export default function SavedDeals() {
                     </Text>
 
                     <Text style={{ color: '#aaa', marginTop: 4 }}>
-                        Deal score: {analysis.deal_analysis?.score ?? 'N/A'}%
+                        Price difference: {analysis.deal_analysis?.score ?? 'N/A'}%
                     </Text>
 
                     <View style={{ height: 1, backgroundColor: '#333', marginVertical: 14 }} />
@@ -232,6 +258,49 @@ export default function SavedDeals() {
                             ? analysis.description_analysis.positives.join(', ')
                             : 'None found'}
                     </Text>
+                </View>
+            )}
+
+            {ebayResults && (
+                <View style={{
+                    marginTop: 18,
+                    backgroundColor: '#111',
+                    padding: 18,
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: '#333'
+                }}>
+                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+                        Similar eBay Listings
+                    </Text>
+
+                    <Text style={{ color: '#aaa', marginTop: 6, marginBottom: 12 }}>
+                        Live fixed-price listings over GBP 1000
+                    </Text>
+
+                    {ebayResults.items && ebayResults.items.length > 0 ? (
+                        ebayResults.items.map((item, index) => (
+                            <View key={index} style={{ marginBottom: 14 }}>
+                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                                    {item.title}
+                                </Text>
+
+                                <Text style={{ color: '#aaa', marginTop: 4 }}>
+                                    GBP {item.price} | {item.condition}
+                                </Text>
+
+                                <Pressable onPress={() => Linking.openURL(item.url)}>
+                                    <Text style={{ color: '#60a5fa', marginTop: 4 }}>
+                                        Open eBay listing
+                                    </Text>
+                                </Pressable>
+                            </View>
+                        ))
+                    ) : (
+                        <Text style={{ color: '#aaa' }}>
+                            No similar eBay listings found.
+                        </Text>
+                    )}
                 </View>
             )}
         </ScrollView>
